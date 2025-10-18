@@ -1,0 +1,27 @@
+{
+  "bundles": [
+    {
+      "name": "load-screen",
+      "assets": [
+        { "alias": "progress_bar", "src": "sprites/progress_bar.png" },
+        { "alias": "progress_bar_fill", "src": "sprites/progress_bar_fill.png" }
+      ]
+    },
+    {
+      "name": "game-screen",
+      "assets": [
+        { "alias": "button", "src": "sprites/button.png" }
+      ]
+    }
+  ],
+  "models": [
+    {
+      "alias": "ground",
+      "src": "models/ground2.glb"
+    },
+    {
+      "alias": "stork",
+      "src": "models/Stork.glb"
+    }
+  ]
+}
