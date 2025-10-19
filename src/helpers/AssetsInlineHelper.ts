@@ -5,13 +5,16 @@ import { Group, AnimationMixer, AnimationClip } from 'three';
 import progressBar from '../../assets/sprites/progress_bar.png';
 import progressBarFill from '../../assets/sprites/progress_bar_fill.png';
 import button from '../../assets/sprites/button.png';
+import objectButton from '../../assets/sprites/plus-button.png';
 
 import ground from '../../assets/models/ground2.glb';
 import objects from '../../assets/models/objects2.glb';
-import animals from '../../assets/models/low_poly_animals.glb';
+
+import groboldFont from '../../assets/fonts/grobold.ttf';
 
 import themeSong from '../../assets/sounds/theme.mp3';
 
+import manifestJson from '../data/assetsManifest.json';
 import sound from './Sound';
 
 type AssetEntry = {
@@ -42,7 +45,8 @@ export default class AssetsInlineHelper {
                     name: "load-screen",
                     assets: [
                         { alias: "progress_bar", src: progressBar},
-                        { alias: "progress_bar_fill", src: progressBarFill} 
+                        { alias: "progress_bar_fill", src: progressBarFill},
+                        { alias: "object_button", src: objectButton }
                     ]
                 },
                 {
@@ -50,7 +54,7 @@ export default class AssetsInlineHelper {
                     assets: [
                         { alias: "button", src: button }
                     ]
-                }
+                }, 
             ],
             models: [
                 {
@@ -60,10 +64,6 @@ export default class AssetsInlineHelper {
                 {
                     alias: "objects",
                     src: objects
-                },
-                {
-                    alias: "animals",
-                    src: animals
                 }
             ],
             sounds: [
@@ -76,7 +76,7 @@ export default class AssetsInlineHelper {
         this._manifest = {
             bundles: (manifestJson.bundles || []).map((bundle: any) => ({
                 name: bundle.name,
-                assets: (bundle.assets || []).map((a: any) => ({
+                assets: (bundle.assets || []).map((a: AssetEntry) => ({
                     alias: a.alias,
                     src: a.src,
                 })),
@@ -108,6 +108,17 @@ export default class AssetsInlineHelper {
         }).catch((error) => {
             console.error(`Error loading bundle:${bundleName}`, error);
         });
+    }
+
+    public async loadFonts(): Promise<void> {
+        await this._loadFonts('grobold', groboldFont);
+    }
+
+    private async _loadFonts(name: string, url: string): Promise<void> {
+        const font = new FontFace(name, `url(${url})`);
+        await font.load();
+        document.fonts.add(font);
+        console.log(`Font "${name}" loaded`);
     }
 
     public async loadModels(onProgress?: (alias: string, loaded: number, total: number) => void): Promise<void> {

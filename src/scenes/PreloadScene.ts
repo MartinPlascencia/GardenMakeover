@@ -29,7 +29,8 @@ export default class PreloadScene extends Container {
     private async _startLoadingAssets(app: Application) {
        // await Assets.load(groboldFont);
 
-        this._assetsInlineHelper.loadBundleByName('load-screen').then(() => {
+        this._assetsInlineHelper.loadBundleByName('load-screen').then(async () => {
+            await this._assetsInlineHelper.loadFonts();
             this._createPreloadAssets(app);
         });
     }

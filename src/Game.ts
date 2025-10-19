@@ -18,15 +18,15 @@ export default class Game {
 
     }
 
-    public async initializeGame() : Promise<void>{
+    public async initializeGame(width: number, height: number) : Promise<void>{
         this._app = new Application();
         this._basicAnimations = new BasicAnimations();
         await this._app.init({
             autoDensity: true,
             backgroundAlpha: 0,
             resizeTo: window,
-            width: window.innerWidth,
-            height: window.innerHeight,
+            width: width,
+            height: height,
             resolution: Math.max(2, window.devicePixelRatio || 1), // High DPI
             antialias: true,
         });
@@ -34,18 +34,12 @@ export default class Game {
         this._effects = new Effects(this._app);
         this._preloadScene = new PreloadScene(this._app, this._basicAnimations, this._assetsInlineHelper);
         this._preloadScene.setContinueCallback(this.startGame.bind(this));
-        this._addObserver();
     }
 
-    private _addObserver() : void {
-        const resizeObserver = new ResizeObserver(() => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            this._app.renderer.resize(width, height);
-            this._preloadScene != undefined && this._preloadScene.active && this._preloadScene.resize(width, height);
-            this._mainScene != undefined && this._mainScene.active && this._mainScene.resize(width, height);
-        });
-        resizeObserver.observe(document.body);
+    public resize(width: number, height: number) : void {
+        this._app.renderer.resize(width, height);
+        this._preloadScene != undefined && this._preloadScene.active && this._preloadScene.resize(width, height);
+        this._mainScene != undefined && this._mainScene.active && this._mainScene.resize(width, height);
     }
 
     public startGame() : void {
@@ -53,7 +47,7 @@ export default class Game {
             this._effects.fadeIn(0.4);
             this._preloadScene.clear();
             this._mainScene = new MainScene(this._app, this._basicAnimations, this._assetsInlineHelper);
-            this._app.stage.addChild(this._effects);
+            //this._app.stage.addChild(this._effects);
         });
     }
 }
