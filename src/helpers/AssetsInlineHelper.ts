@@ -2,31 +2,28 @@ import { Assets, AssetsManifest } from 'pixi.js';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, AnimationMixer, AnimationClip } from 'three';
 
-import progressBar from '../../assets/sprites/progress_bar.png';
-import progressBarFill from '../../assets/sprites/progress_bar_fill.png';
-import button from '../../assets/sprites/button.png';
-import objectButton from '../../assets/sprites/plus-button.png';
-import categoryButton from '../../assets/sprites/category_button.png';
-import strawberry from '../../assets/sprites/strawberry.png';
-import tomato from '../../assets/sprites/tomato.png';
-import corn from '../../assets/sprites/corn.png';
-import grape from '../../assets/sprites/grape.png';
-import cow from '../../assets/sprites/cow.png';
-import chicken from '../../assets/sprites/chicken.png';
-import sheep from '../../assets/sprites/sheep.png';
-import dayButton from '../../assets/sprites/day_button.png';
-import nightButton from '../../assets/sprites/night_button.png';
-
-import ground from '../../assets/models/ground2.glb';
-import objects from '../../assets/models/objects2.glb';
-
-import groboldFont from '../../assets/fonts/grobold.ttf';
-
-import themeSong from '../../assets/sounds/theme.mp3';
-
-import manifestJson from '../data/assetsManifest.json';
+import manifestJson from '../data/assets.json';
 import sound from '../utils/Sound';
 
+// Add webpack require.context type declaration
+declare const require: {
+    context(path: string, deep?: boolean, filter?: RegExp): {
+        (id: string): any;
+        keys(): string[];
+    };
+};
+
+type GameAssets = {
+    bundles: Bundle[];
+    models: AssetEntry[];
+    fonts: AssetEntry[];
+    sounds: AssetEntry[];
+}
+
+type Bundle = {
+    name: string;
+    assets: AssetEntry[];
+}
 type AssetEntry = {
     alias: string;
     src: string;
@@ -41,78 +38,54 @@ export type AnimatedModel = {
 export default class AssetsInlineHelper {
     private _manifest!: AssetsManifest;
     private _modelEntries: AssetEntry[] = [];
-    private _sounds: AssetEntry[] = [];
+    private _fontEntries: AssetEntry[] = [];
+    private _soundEntries: AssetEntry[] = [];
     private _models: Record<string, AnimatedModel> = {};
+    private _gameAssets: GameAssets = manifestJson as GameAssets;
 
     constructor() {
         this._createManifestFromJson();
     }
 
-    private async _createManifestFromJson(): Promise<void> {
-        const manifestJson = {
-            bundles: [
-                {
-                    name: "load-screen",
-                    assets: [
-                        { alias: "progress_bar", src: progressBar},
-                        { alias: "progress_bar_fill", src: progressBarFill},
-                        { alias: "object_button", src: objectButton },
-                        { alias: "category_button", src: categoryButton },
-                        { alias: "strawberry", src: strawberry },
-                        { alias: "tomato", src: tomato },
-                        { alias: "corn", src: corn },
-                        { alias: "grape", src: grape },
-                        { alias: "cow", src: cow },
-                        { alias: "chicken", src: chicken },
-                        { alias: "sheep", src: sheep },
-                        { alias: "day_button", src: dayButton },
-                        { alias: "night_button", src: nightButton }
-                    ]
-                },
-                {
-                    name: "game-screen",
-                    assets: [
-                        { alias: "button", src: button }
-                    ]
-                }, 
-            ],
-            models: [
-                {
-                    alias: "ground",
-                    src: ground
-                },
-                {
-                    alias: "objects",
-                    src: objects
-                }
-            ],
-            sounds: [
-                { 
-                    alias: "theme", 
-                    src: themeSong
-                }
-            ]
-        };
+    private _createManifestFromJson(): void {
+        const assetContext = require.context('../assets', true, /\.(png|jpe?g|svg|glb|ttf|mp3|wav|ogg)$/i);
+
         this._manifest = {
-            bundles: (manifestJson.bundles || []).map((bundle: any) => ({
+            bundles: (this._gameAssets.bundles || []).map((bundle: Bundle) => ({
                 name: bundle.name,
-                assets: (bundle.assets || []).map((a: AssetEntry) => ({
-                    alias: a.alias,
-                    src: a.src,
+                assets: (bundle.assets || []).map((asset: AssetEntry) => ({
+                    alias: asset.alias,
+                    src: assetContext(`./${asset.src}`),
                 })),
             })),
         };
 
-        this._modelEntries = (manifestJson.models || []).map((m: AssetEntry) => ({
-            alias: m.alias,
-            src: m.src,
+        this._modelEntries = (this._gameAssets.models || []).map((model: AssetEntry) => ({
+            alias: model.alias,
+            src: assetContext(`./${model.src}`),
         }));
 
-        this._sounds = manifestJson.sounds;
+        this._fontEntries = (this._gameAssets.fonts || []).map((font: AssetEntry) => ({
+            alias: font.alias,
+            src: assetContext(`./${font.src}`),
+        }));
+
+        this._soundEntries = (this._gameAssets.sounds || []).map((sound: AssetEntry) => ({
+            alias: sound.alias,
+            src: assetContext(`./${sound.src}`),
+        }));
     }
 
     public get models(): Record<string, AnimatedModel> {
         return this._models;
+    }
+
+    public async init(): Promise<void> {
+        await Promise.all([
+            this.loadFonts(),
+            this.loadModels(),
+            this.loadSounds()
+        ]);
     }
 
     public async loadBundleByName(bundleName: string, progressCallback?: (progress: number) => void): Promise<void> {
@@ -123,60 +96,73 @@ export default class AssetsInlineHelper {
         }
 
         Assets.addBundle(bundle.name, bundle.assets);
-        await Assets.loadBundle(bundleName, progress => {
-            progressCallback && progressCallback(progress);
-        }).catch((error) => {
-            console.error(`Error loading bundle:${bundleName}`, error);
-        });
+        try {
+            await Assets.loadBundle(bundleName, progress => {
+                progressCallback?.(progress);
+            });
+        } catch (error) {
+            console.error(`Error loading bundle: ${bundleName}`, error);
+            throw error;
+        }
     }
 
     public async loadFonts(): Promise<void> {
-        await this._loadFonts('grobold', groboldFont);
+        await Promise.all(this._fontEntries.map(font => this._loadFont(font.alias, font.src)));
     }
 
-    private async _loadFonts(name: string, url: string): Promise<void> {
-        const font = new FontFace(name, `url(${url})`);
-        await font.load();
-        document.fonts.add(font);
-        console.log(`Font "${name}" loaded`);
+    private async _loadFont(name: string, url: string): Promise<void> {
+        try {
+            const font = new FontFace(name, `url(${url})`);
+            await font.load();
+            document.fonts.add(font);
+            console.log(`Font "${name}" loaded`);
+        } catch (error) {
+            console.error(`Error loading font "${name}" from "${url}"`, error);
+            throw error;
+        }
     }
 
     public async loadModels(onProgress?: (alias: string, loaded: number, total: number) => void): Promise<void> {
         const loader = new GLTFLoader();
 
-        for (const model of this._modelEntries) {
+        await Promise.all(this._modelEntries.map(async (model) => {
             const modelUrl = model.src;
             const alias = model.alias;
 
-            const gltf = await new Promise<GLTF>((resolve, reject) => {
-                loader.load(modelUrl, (gltf) => resolve(gltf),
-                    (progress) => {
-                        if (onProgress) {
-                            onProgress(alias, progress.loaded, progress.total ?? 1);
-                        }
-                    },
-                    (err) => reject(err)
-                );
-            });
+            try {
+                const gltf = await new Promise<GLTF>((resolve, reject) => {
+                    loader.load(modelUrl, resolve,
+                        (progress) => {
+                            if (onProgress) {
+                                onProgress(alias, progress.loaded, progress.total ?? 1);
+                            }
+                        },
+                        reject
+                    );
+                });
 
-            /* gltf.scene.traverse((child) => {
-                if (child) {
-                    console.log('Found mesh:', alias, child.name, child.type);
-                }
-            }); */
+                console.log(`Animations for model "${alias}":`, gltf.animations);
 
-            console.log("animations", gltf.animations);
-            this._models[alias] = {
-                model: gltf.scene,
-                animationMixer: new AnimationMixer(gltf.scene),
-                animationClips: gltf.animations
-            };
-        }
+                this._models[alias] = {
+                    model: gltf.scene,
+                    animationMixer: new AnimationMixer(gltf.scene),
+                    animationClips: gltf.animations
+                };
+            } catch (error) {
+                console.error(`Error loading model "${alias}" from "${modelUrl}"`, error);
+                throw error;
+            }
+        }));
     }
 
     public async loadSounds(): Promise<void> {
-        this._sounds.forEach(async (currentSound: AssetEntry) => {
-            await sound.loadSound(currentSound.alias, currentSound.src);
-        });
+        await Promise.all(this._soundEntries.map(async (currentSound) => {
+            try {
+                await sound.loadSound(currentSound.alias, currentSound.src);
+            } catch (error) {
+                console.error(`Error loading sound "${currentSound.alias}" from "${currentSound.src}"`, error);
+                throw error;
+            }
+        }));
     }
 }

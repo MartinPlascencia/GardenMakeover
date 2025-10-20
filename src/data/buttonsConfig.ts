@@ -38,9 +38,9 @@ export default {
         },
         {
             uiAssetConfig: {
-                portraitPosition: {x: 0.6, y: 0.5},
+                portraitPosition: {x: 0.7, y: 0.5},
                 portraitSize: {x: 0.1, y: 0.2},
-                landscapePosition: {x: 0.6, y: 0.5},
+                landscapePosition: {x: 0.7, y: 0.5},
                 landscapeSize: {x: 0.1, y: 0.1},
             },
             buttonTexture: 'object_button',
