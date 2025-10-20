@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import AssetsInlineHelper from '../helpers/AssetsInlineHelper';
 import ModelAsset from '../helpers/ModelAsset';
 import GameUI from '../helpers/GameUI/GameUI';
+import SplashEffect from '../helpers/SplashEffect';
 import { ModelData } from '../types/game';
 import gsap from 'gsap';
 
@@ -24,6 +25,7 @@ export default class MainScene {
     private _directionalLight!: THREE.DirectionalLight;
     private _isPaused: boolean = false;
     private _gameUI!: GameUI;
+    private _splashParticles!: SplashEffect;
     private _currentObjectPosition: THREE.Vector3 = new THREE.Vector3();
     private _modelPlaceHolder!: ModelAsset;
 
@@ -83,10 +85,12 @@ export default class MainScene {
     }
 
     private _changeDayNight(isDay: boolean): void {
+        sound.playSound('click');
         isDay ? this._setDayLight(2) : this._setNightLight(2);
     }
 
     private _addButtonPressed(position: THREE.Vector3): void {
+        sound.playSound('click_add');
         this._currentObjectPosition = position;
         this._modelPlaceHolder.position.set(position.x, position.y, position.z);
         this._modelPlaceHolder.visible = true;
@@ -94,6 +98,7 @@ export default class MainScene {
     }
 
     private _createObject(modelData: ModelData): void {
+        sound.playSound('place_object');
         let modelAsset: ModelAsset;
 
         if (modelData.parentName) {
@@ -112,6 +117,10 @@ export default class MainScene {
 
         PlaneBasicAnimations.unpopObject3D(this._modelPlaceHolder);
         PlaneBasicAnimations.popObject3D(modelAsset);
+        sound.playSound(modelData.soundName);
+
+        this._splashParticles.reset(this._currentObjectPosition);
+        this._shakeCamera(0.5, 0.2);
     }
 
     private _createLights(): void {
@@ -127,6 +136,7 @@ export default class MainScene {
     }
 
     private _setNightLight(duration: number = 0): void {
+        sound.playSound('irons');
         gsap.to(this._ambientLight, {
             intensity: 0.5,
             duration: duration,
@@ -139,13 +149,15 @@ export default class MainScene {
     }
 
     private _setDayLight(duration: number = 0): void {
+
+        sound.playSound('rooster');
         gsap.to(this._ambientLight, {
             intensity: 3,
-            duration: 2,
+            duration: duration,
         });
         gsap.to(this._directionalLight, {
             intensity: 5,
-            duration: 2,
+            duration: duration,
         });
         this._scene.background = new THREE.Color(0x9cfff0);
     }
@@ -167,6 +179,9 @@ export default class MainScene {
             }
         });
         this._scene.add(this._modelPlaceHolder);
+
+        this._splashParticles = new SplashEffect(this._assetsInlineHelper.textures['smoke'], 20, 2.5);
+        this._scene.add(this._splashParticles.object3D);
     }
 
     private _create(): void {
@@ -200,6 +215,7 @@ export default class MainScene {
         this._activeModels.forEach(model => {
             model.animationMixer?.update(delta);
         });
+        this._splashParticles.update(delta, this._camera.position);
     }
 
     private _animate(): void {
@@ -234,6 +250,30 @@ export default class MainScene {
         this._camera.position.z = distance;
         this._camera.lookAt(0, 0, 0);
         this._camera.updateProjectionMatrix();
+    }
+
+    private _shakeCamera(duration: number = 0.5, magnitude: number = 0.1): void {
+        const originalPosition = this._camera.position.clone();
+        const tl = gsap.timeline();
+
+        const shakes = Math.floor(duration / 0.02); // number of shake steps
+        for (let i = 0; i < shakes; i++) {
+            tl.to(this._camera.position, {
+                x: originalPosition.x + (Math.random() - 0.5) * magnitude,
+                y: originalPosition.y + (Math.random() - 0.5) * magnitude,
+                z: originalPosition.z + (Math.random() - 0.5) * magnitude,
+                duration: 0.02,
+                ease: "power1.inOut"
+            });
+        }
+
+        tl.to(this._camera.position, {
+            x: originalPosition.x,
+            y: originalPosition.y,
+            z: originalPosition.z,
+            duration: 0.05,
+            ease: "power1.out"
+        });
     }
 
     public get active(): boolean {

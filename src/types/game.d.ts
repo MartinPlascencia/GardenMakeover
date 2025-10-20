@@ -54,6 +54,7 @@ type ModelData = {
     parentName?: string,
     animationName?: string,
     scale: number,
+    soundName: string,
 }
 
 export { ButtonsConfig, UIAssetConfig, AddButtonConfig, CategoryMenuConfig, CategoryButtonConfig, AssetMenuConfig, AssetButtonConfig, ModelData };

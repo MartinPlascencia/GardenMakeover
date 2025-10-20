@@ -24,7 +24,7 @@ export default {
                 landscapeSize: {x: 0.1, y: 0.1},
             },
             buttonTexture: 'object_button',
-            objectPosition: {x: 0, y: 3, z: 0},
+            objectPosition: {x: -1, y: 3, z: -1},
         },
         {
             uiAssetConfig: {
@@ -99,7 +99,8 @@ export default {
                     modelData: {
                         modelName: 'corn_3',
                         parentName: 'objects',
-                        scale: 0.8
+                        scale: 0.8,
+                        soundName: 'plant_growing_1'
                     }
                 },
                 {
@@ -107,7 +108,8 @@ export default {
                     modelData: {
                         modelName: 'strawberry_3',
                         parentName: 'objects',
-                        scale: 0.8
+                        scale: 0.8,
+                        soundName: 'plant_growing_2'
                     }
                 },
                 {
@@ -115,7 +117,8 @@ export default {
                     modelData: {
                         modelName: 'grape_3',
                         parentName: 'objects',
-                        scale: 0.8
+                        scale: 0.8,
+                        soundName: 'plant_growing_3'
                     }
                 },
                 {
@@ -123,7 +126,8 @@ export default {
                     modelData: {
                         modelName: 'tomato_3',
                         parentName: 'objects',
-                        scale: 0.8
+                        scale: 0.8,
+                        soundName: 'plant_growing_1'
                     }
                     
                 }
@@ -148,7 +152,8 @@ export default {
                         modelName: 'cow_1',
                         parentName: 'objects',
                         animationName: 'action_cow',
-                        scale: 0.6
+                        scale: 0.6, 
+                        soundName: 'cow'
                     }
                     
                 },
@@ -158,7 +163,8 @@ export default {
                         modelName: 'sheep_1',
                         parentName: 'objects',
                         animationName: 'action_sheep',
-                        scale: 0.7
+                        scale: 0.8,
+                        soundName: 'sheep'
                     }
                 },
                 {
@@ -167,10 +173,35 @@ export default {
                         modelName: 'chicken_1',
                         parentName: 'objects',
                         animationName: 'action_chicken',
-                        scale: 0.7
+                        scale: 1,
+                        soundName: 'chicken'
                     }
                 }
             ]
-        }
+        },
+        {
+            tag: 'Buildings',
+            uiAssetConfig: {
+                portraitPosition: {x: 0.5, y: 0.9},
+                portraitSize: {x: 0.7, y: 0.15},
+                landscapePosition: {x: 0.5, y: 0.9},
+                landscapeSize: {x: 0.8, y: 0.15},
+            },
+            buttonsData: {
+                buttonSpacing: 150,
+                buttonSize: {x: 100, y: 100},
+            },
+            buttonsConfig: [
+                {
+                    textureName: 'fence',
+                    modelData: { 
+                        modelName: 'fence',
+                        parentName: 'objects',
+                        scale: 0.35,
+                        soundName: 'building'
+                    }
+                }
+            ]
+        },
     ],
 }

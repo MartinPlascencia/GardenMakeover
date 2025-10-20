@@ -23,6 +23,10 @@ export default class CategoriesMenu extends ScaledContainer {
         return this._isActive;
     }
 
+    public get assetButtons(): AssetButton[] {
+        return this._assetButtons;
+    }
+
     private _setScaler(uiAssetConfig: UIAssetConfig): void {
         this.scaler.setSizes(uiAssetConfig);
         this.scaler.setOriginalSize(this.width, this.height);
@@ -57,8 +61,7 @@ export default class CategoriesMenu extends ScaledContainer {
         this._isActive = true;
         this.scaler.resize(window.innerWidth, window.innerHeight);
         this.alpha == 0 && (this.alpha = 1);
-        this.activateButtons();
-        PlaneBasicAnimations.popObject(this);
+        PlaneBasicAnimations.popObject(this, () => this.activateButtons());
     }
 
     public hide(): void {

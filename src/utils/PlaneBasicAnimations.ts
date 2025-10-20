@@ -3,13 +3,8 @@ import { Container, Sprite, Graphics } from "pixi.js";
 import { Object3D, Group } from "three";
 
 export default class PlaneBasicAnimations {
-    static animateButton(
-        buttonContainer: Container | Sprite,
-        callback?: () => void,
-        reactivateButton = false
-    ): void {
+    static animateButton(buttonContainer: Container | Sprite, callback?: () => void,reactivateButton = false): void {
         buttonContainer.eventMode = "none";
-
         gsap.to(buttonContainer.scale, {
             x: buttonContainer.scale.x * 0.7,
             y: buttonContainer.scale.y * 0.7,
@@ -60,7 +55,7 @@ export default class PlaneBasicAnimations {
         });
     }
 
-    static popObject(object: Container | Sprite): void {
+    static popObject(object: Container | Sprite, callback?: ()=> void): void {
         object.scale.x == 0 && object.scale.set(1);
         object.alpha == 0 && (object.alpha = 1);
         gsap.from(object.scale, {
@@ -68,6 +63,7 @@ export default class PlaneBasicAnimations {
             y: 0,
             duration: 0.4,
             ease: "back.out",
+            onComplete: () => { callback?.(); }
         });
     }
 

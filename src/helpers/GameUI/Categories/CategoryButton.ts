@@ -33,7 +33,7 @@ export default class CategoryButton extends Container {
     }
 
     private _onButtonPressed(): void {
-        PlaneBasicAnimations.animateButton(this, undefined, true);
+        PlaneBasicAnimations.animateButton(this);
         eventsSystem.emit('categoryButtonPressed', this._name);
     }
 }

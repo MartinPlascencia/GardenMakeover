@@ -1,6 +1,6 @@
 import { Assets, AssetsManifest } from 'pixi.js';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Group, AnimationMixer, AnimationClip } from 'three';
+import { Group, AnimationMixer, AnimationClip, TextureLoader, Texture } from 'three';
 
 import manifestJson from '../data/assets.json';
 import sound from '../utils/Sound';
@@ -18,6 +18,7 @@ type GameAssets = {
     models: AssetEntry[];
     fonts: AssetEntry[];
     sounds: AssetEntry[];
+    textures: AssetEntry[];
 }
 
 type Bundle = {
@@ -37,10 +38,13 @@ export type AnimatedModel = {
 
 export default class AssetsInlineHelper {
     private _manifest!: AssetsManifest;
+    private _textureLoader: TextureLoader = new TextureLoader();
     private _modelEntries: AssetEntry[] = [];
     private _fontEntries: AssetEntry[] = [];
     private _soundEntries: AssetEntry[] = [];
+    private _textureEntries: AssetEntry[] = [];
     private _models: Record<string, AnimatedModel> = {};
+    private _textures: Record<string, Texture> = {};
     private _gameAssets: GameAssets = manifestJson as GameAssets;
 
     constructor() {
@@ -74,10 +78,19 @@ export default class AssetsInlineHelper {
             alias: sound.alias,
             src: assetContext(`./${sound.src}`),
         }));
+
+        this._textureEntries = (this._gameAssets.textures || []).map((texture: AssetEntry) => ({
+            alias: texture.alias,
+            src: assetContext(`./${texture.src}`),
+        }));
     }
 
     public get models(): Record<string, AnimatedModel> {
         return this._models;
+    }
+
+    public get textures(): Record<string, Texture> {
+        return this._textures;
     }
 
     public async init(): Promise<void> {
@@ -120,6 +133,20 @@ export default class AssetsInlineHelper {
             console.error(`Error loading font "${name}" from "${url}"`, error);
             throw error;
         }
+    }
+
+    public async loadTextures(): Promise<void> {
+        await Promise.all(this._textureEntries.map(async (texture) => {
+            try {
+                const loadingTexture = await this._textureLoader.loadAsync(texture.src);
+                this._textures[texture.alias] = loadingTexture;
+                console.log(`Texture "${texture.alias}" loaded`);
+            }
+            catch (error) {
+                console.error(`Error loading texture "${texture.alias}" from "${texture.src}"`, error);
+                throw error;
+            }
+        }));
     }
 
     public async loadModels(onProgress?: (alias: string, loaded: number, total: number) => void): Promise<void> {

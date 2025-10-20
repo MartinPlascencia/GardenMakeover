@@ -96,6 +96,7 @@ export default class PreloadScene extends Container {
         }).then(async () => {
             await this._assetsInlineHelper.loadModels();
             await this._assetsInlineHelper.loadSounds();
+            await this._assetsInlineHelper.loadTextures();
             this._basicAnimations.fadeOut(barAssetsContainer, 1);
             this._continueCallback?.();
         })
