@@ -5,7 +5,7 @@ import BasicAnimations from './helpers/BasicAnimations';
 import Effects from './helpers/Effects';
 import AssetsInlineHelper from './helpers/AssetsInlineHelper';
 
-import sound from './helpers/Sound';
+import sound from './utils/Sound';
 
 export default class Game {
     private _app!: Application;
@@ -46,7 +46,7 @@ export default class Game {
         this._effects.fadeOut(0.4, () => {
             this._effects.fadeIn(0.4);
             this._preloadScene.clear();
-            this._mainScene = new MainScene(this._app, this._basicAnimations, this._assetsInlineHelper);
+            this._mainScene = new MainScene(this._app, this._assetsInlineHelper);
             //this._app.stage.addChild(this._effects);
         });
     }

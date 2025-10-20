@@ -1,4 +1,5 @@
 import { Container, Sprite, Graphics } from 'pixi.js';
+import { UIAssetConfig } from '../../types/game';
 export default class ScalerHelper {
     private _targetScreenSize = { width: 0, height: 0 };
     private _originalSize = { width: 0, height: 0 };
@@ -11,6 +12,13 @@ export default class ScalerHelper {
     constructor(
         private _displayObject: Container | Sprite | Graphics,
     ) {}
+
+    public setSizes(uiAssetConfig: UIAssetConfig): void {
+        this.setPortraitScreenPosition(uiAssetConfig.portraitPosition.x, uiAssetConfig.portraitPosition.y);
+        this.setPortraitScreenSize(uiAssetConfig.portraitSize.x, uiAssetConfig.portraitSize.y);
+        this.setLandscapeScreenPosition(uiAssetConfig.landscapePosition.x, uiAssetConfig.landscapePosition.y);
+        this.setLandscapeScreenSize(uiAssetConfig.landscapeSize.x, uiAssetConfig.landscapeSize.y);
+    }
 
     public setOriginalSize(width: number, height: number): void {
         this._originalSize.width = width;

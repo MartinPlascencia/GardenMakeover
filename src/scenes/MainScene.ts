@@ -1,14 +1,15 @@
 import { Application, Sprite, Graphics, Assets, Rectangle, BlurFilter, BitmapText, Container} from 'pixi.js';
 import { sdk } from '@smoud/playable-sdk';
-import BasicAnimations from '../helpers/BasicAnimations';
 import * as THREE from 'three';
 import AssetsInlineHelper from '../helpers/AssetsInlineHelper';
 import ModelAsset from '../helpers/ModelAsset';
 import GameUI from '../helpers/GameUI/GameUI';
+import { ModelData } from '../types/game';
+import gsap from 'gsap';
 
-import sound from '../helpers/Sound';
-import Game from '../Game';
-
+import eventsSystem from '../utils/EventsSystem';
+import sound from '../utils/Sound';
+import PlaneBasicAnimations from '../utils/PlaneBasicAnimations';
 export default class MainScene {
     private _active: boolean = true;
     private _assetsInlineHelper!: AssetsInlineHelper;
@@ -18,14 +19,16 @@ export default class MainScene {
     private _camera: THREE.PerspectiveCamera;
     private _clock: THREE.Clock;
     private _groundModel!: ModelAsset;
-    private _cowModel!: ModelAsset;
-    private _chickenModel!: ModelAsset;
+    private _activeModels: ModelAsset[] = [];
     private _ambientLight!: THREE.AmbientLight;
     private _directionalLight!: THREE.DirectionalLight;
     private _isPaused: boolean = false;
     private _gameUI!: GameUI;
+    private _currentObjectPosition: THREE.Vector3 = new THREE.Vector3();
+    private _modelPlaceHolder!: ModelAsset;
 
-    constructor(app: Application, basicAnimations: BasicAnimations, assetsInlineHelper: AssetsInlineHelper) {
+
+    constructor(app: Application, assetsInlineHelper: AssetsInlineHelper) {
 
         this._assetsInlineHelper = assetsInlineHelper;
 
@@ -57,8 +60,6 @@ export default class MainScene {
         this._camera.lookAt(0, 0, 0);
 
         this._clock = new THREE.Clock();
-
-        this._groundModel = new ModelAsset(this._assetsInlineHelper.models['ground'].model);
         this._create();
 
         this._gameUI = new GameUI(app);
@@ -71,42 +72,134 @@ export default class MainScene {
             }
         });
 
+        this._addEvents();
+
     }
 
-    private _create(): void {
+    private _addEvents(): void {
+        eventsSystem.on('addObjectButtonPressed', this._addButtonPressed.bind(this)); 
+        eventsSystem.on('assetButtonPressed', this._createObject.bind(this));  
+        eventsSystem.on('toggleDayNight', this._changeDayNight.bind(this));
+    }
 
-        sound.playSound('theme', true);
-        this._ambientLight = new THREE.AmbientLight(0xffffff, 2);
+    private _changeDayNight(isDay: boolean): void {
+        isDay ? this._setDayLight(2) : this._setNightLight(2);
+    }
+
+    private _addButtonPressed(position: THREE.Vector3): void {
+        this._currentObjectPosition = position;
+        this._modelPlaceHolder.position.set(position.x, position.y, position.z);
+        this._modelPlaceHolder.visible = true;
+        PlaneBasicAnimations.popObject3D(this._modelPlaceHolder);
+    }
+
+    private _createObject(modelData: ModelData): void {
+        let modelAsset: ModelAsset;
+
+        if (modelData.parentName) {
+            const parentModelData = this._assetsInlineHelper.models[modelData.parentName];
+            modelAsset = new ModelAsset(parentModelData.model, modelData.modelName, parentModelData.animationClips);
+        } else {
+            const modelConfig = this._assetsInlineHelper.models[modelData.modelName];
+            modelAsset = new ModelAsset(modelConfig.model, undefined, modelConfig.animationClips);
+        }
+
+        modelData.animationName && modelAsset.playAnimation(modelData.animationName);
+        modelAsset.position.set(this._currentObjectPosition.x, this._currentObjectPosition.y, this._currentObjectPosition.z);
+        modelAsset.scale.set(modelData.scale, modelData.scale, modelData.scale);
+        this._scene.add(modelAsset);
+        this._activeModels.push(modelAsset);
+
+        PlaneBasicAnimations.unpopObject3D(this._modelPlaceHolder);
+        PlaneBasicAnimations.popObject3D(modelAsset);
+    }
+
+    private _createLights(): void {
+        this._ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
         this._scene.add(this._ambientLight);
 
-        this._directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-        this._directionalLight.position.set(0, 1, 1);
+        this._directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+        this._directionalLight.position.set(5, 20, 7.5);
         this._scene.add(this._directionalLight);
 
+        this._setNightLight(0);
+
+    }
+
+    private _setNightLight(duration: number = 0): void {
+        gsap.to(this._ambientLight, {
+            intensity: 0.5,
+            duration: duration,
+        });
+        gsap.to(this._directionalLight, {
+            intensity: 1.5,
+            duration: duration,
+        });
+        this._scene.background = new THREE.Color(0x001e2d);
+    }
+
+    private _setDayLight(duration: number = 0): void {
+        gsap.to(this._ambientLight, {
+            intensity: 3,
+            duration: 2,
+        });
+        gsap.to(this._directionalLight, {
+            intensity: 5,
+            duration: 2,
+        });
+        this._scene.background = new THREE.Color(0x9cfff0);
+    }
+
+    private _createModels(): void { 
+        this._groundModel = new ModelAsset(this._assetsInlineHelper.models['ground'].model);
         this._groundModel.scale.set(0.5, 0.5, 0.5);
         this._scene.add(this._groundModel);
 
         const objectsModel = this._assetsInlineHelper.models['objects'];
-        this._cowModel = new ModelAsset(objectsModel.model, 'cow_1', objectsModel.animationClips);
-        this._cowModel.visible = true;
-        this._cowModel.position.set(0, 3, 0);
-        this._cowModel.playAnimation('action_cow');
-        this._scene.add(this._cowModel);
-        
-        this._chickenModel = new ModelAsset(objectsModel.model, 'chicken_1', objectsModel.animationClips);
-        this._chickenModel.visible = true;
-        this._chickenModel.scale.set(1, 1, 1);
-        this._chickenModel.position.set(5, 3, 0);
-        this._chickenModel.playAnimation('action_chicken');
-        this._scene.add(this._chickenModel);
+        this._modelPlaceHolder = new ModelAsset(objectsModel.model, 'placeholder');
+        this._modelPlaceHolder.scale.set(0.3, 0.3, 0.3);
+        this._modelPlaceHolder.position.set(0, 3, 0);
+        this._modelPlaceHolder.visible = false;
+        const basicMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        this._modelPlaceHolder.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+                (child as THREE.Mesh).material = basicMaterial;
+            }
+        });
+        this._scene.add(this._modelPlaceHolder);
+    }
+
+    private _create(): void {
+
+        this._createLights();
+        this._createModels();
 
         this._animate();
+        this._animateScene();
+    }
+
+    private async _animateScene(): Promise<void> {
+        this._updateCameraPosition(window.innerWidth, window.innerHeight);
+        this._setDayLight(2);
+        await gsap.from(this._camera.position,{
+            y:60,
+            duration: 3,
+            ease: "power2.out",
+            onUpdate: () => {
+                this._camera.lookAt(0, 0, 0);
+            }
+        });
+
+        sound.playSound('theme', true);
+        this._gameUI.showAddObjectButtons(0.3);
+        this._gameUI.showDayButton();
     }
 
     private update(): void {
         const delta = this._clock.getDelta();
-        this._cowModel.animationMixer?.update(delta);
-        this._chickenModel.animationMixer?.update(delta);
+        this._activeModels.forEach(model => {
+            model.animationMixer?.update(delta);
+        });
     }
 
     private _animate(): void {
@@ -123,14 +216,24 @@ export default class MainScene {
 
     public resize(width: number, height: number): void {
 
+        this._updateCameraPosition(width, height);
+        this._renderer.setSize(width, height);
+        this._gameUI.resize(width, height);
+    }
+
+    private _updateCameraPosition(width: number, height: number): void {
         this._camera.aspect = width / height;
-        this._camera.position.z = width > height ? 12 : 15;
+        const minDistance = 8;  
+        const maxDistance = 18; 
+
+        const normalizedWidth = Math.min(Math.max((width - 400) / 1200, 0), 1);
+        const distance = maxDistance - (maxDistance - minDistance) * normalizedWidth;
+
+        this._camera.position.x = 0;
+        this._camera.position.y = distance;
+        this._camera.position.z = distance;
         this._camera.lookAt(0, 0, 0);
         this._camera.updateProjectionMatrix();
-
-        this._renderer.setSize(width, height);
-
-        this._gameUI.resize(width, height);
     }
 
     public get active(): boolean {

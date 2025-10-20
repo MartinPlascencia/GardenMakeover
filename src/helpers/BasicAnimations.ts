@@ -95,7 +95,7 @@ export default class BasicAnimations {
         });
     }
 
-    public shakeContainer(target: Container, intensity = 10, duration = 0.5): void {
+    public shakeContainer(target: Container | Sprite, intensity = 10, duration = 0.5): void {
         const original = { x: target.x, y: target.y };
         const timeline = gsap.timeline({
             onComplete: () => {

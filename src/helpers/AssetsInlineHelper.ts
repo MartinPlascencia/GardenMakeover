@@ -6,6 +6,16 @@ import progressBar from '../../assets/sprites/progress_bar.png';
 import progressBarFill from '../../assets/sprites/progress_bar_fill.png';
 import button from '../../assets/sprites/button.png';
 import objectButton from '../../assets/sprites/plus-button.png';
+import categoryButton from '../../assets/sprites/category_button.png';
+import strawberry from '../../assets/sprites/strawberry.png';
+import tomato from '../../assets/sprites/tomato.png';
+import corn from '../../assets/sprites/corn.png';
+import grape from '../../assets/sprites/grape.png';
+import cow from '../../assets/sprites/cow.png';
+import chicken from '../../assets/sprites/chicken.png';
+import sheep from '../../assets/sprites/sheep.png';
+import dayButton from '../../assets/sprites/day_button.png';
+import nightButton from '../../assets/sprites/night_button.png';
 
 import ground from '../../assets/models/ground2.glb';
 import objects from '../../assets/models/objects2.glb';
@@ -15,7 +25,7 @@ import groboldFont from '../../assets/fonts/grobold.ttf';
 import themeSong from '../../assets/sounds/theme.mp3';
 
 import manifestJson from '../data/assetsManifest.json';
-import sound from './Sound';
+import sound from '../utils/Sound';
 
 type AssetEntry = {
     alias: string;
@@ -46,7 +56,17 @@ export default class AssetsInlineHelper {
                     assets: [
                         { alias: "progress_bar", src: progressBar},
                         { alias: "progress_bar_fill", src: progressBarFill},
-                        { alias: "object_button", src: objectButton }
+                        { alias: "object_button", src: objectButton },
+                        { alias: "category_button", src: categoryButton },
+                        { alias: "strawberry", src: strawberry },
+                        { alias: "tomato", src: tomato },
+                        { alias: "corn", src: corn },
+                        { alias: "grape", src: grape },
+                        { alias: "cow", src: cow },
+                        { alias: "chicken", src: chicken },
+                        { alias: "sheep", src: sheep },
+                        { alias: "day_button", src: dayButton },
+                        { alias: "night_button", src: nightButton }
                     ]
                 },
                 {
