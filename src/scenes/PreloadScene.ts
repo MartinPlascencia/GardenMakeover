@@ -1,22 +1,21 @@
 import { Container, Sprite, Application, Graphics, Assets } from 'pixi.js';
-import BasicAnimations from '../helpers/BasicAnimations';
 import ScaledContainer from '../helpers/Scale/ScaledContainer';
 import ScaledText from '../helpers/Scale/ScaledText';
 import AssetsInlineHelper from '../helpers/AssetsInlineHelper';
 
+import PlaneBasicAnimations from '../utils/PlaneBasicAnimations';
+
 export default class PreloadScene extends Container {
     private _background!: Graphics;
     private _assetsContainer!: ScaledContainer;
-    private _basicAnimations: BasicAnimations;
     private _continueCallback!: (() => void) | undefined;
     private _active: boolean = true;
     private _assetsInlineHelper: AssetsInlineHelper;
 
     private _backgroundColor: number = 0x33067a;
 
-    constructor(app: Application, basicAnimations: BasicAnimations, assetsInlineHelper: AssetsInlineHelper) {
+    constructor(app: Application, assetsInlineHelper: AssetsInlineHelper) {
         super();
-        this._basicAnimations = basicAnimations;
         this._assetsInlineHelper = assetsInlineHelper;
         app.stage.addChild(this);
         this._startLoadingAssets(app);
@@ -27,8 +26,6 @@ export default class PreloadScene extends Container {
     }
 
     private async _startLoadingAssets(app: Application) {
-       // await Assets.load(groboldFont);
-
         this._assetsInlineHelper.loadBundleByName('load-screen').then(async () => {
             await this._assetsInlineHelper.loadFonts();
             this._createPreloadAssets(app);
@@ -64,7 +61,7 @@ export default class PreloadScene extends Container {
         loadingText.y = -app.screen.height * 0.07;
         barAssetsContainer.addChild(loadingText);
 
-        this._basicAnimations.popObject(loadingText);
+        PlaneBasicAnimations.popObject(loadingText);
 
         const progressBar = new Sprite(Assets.get('progress_bar'));
         progressBar.anchor.set(0.5);
@@ -97,7 +94,7 @@ export default class PreloadScene extends Container {
             await this._assetsInlineHelper.loadModels();
             await this._assetsInlineHelper.loadSounds();
             await this._assetsInlineHelper.loadTextures();
-            this._basicAnimations.fadeOut(barAssetsContainer, 1);
+            PlaneBasicAnimations.fadeOut(barAssetsContainer, 1);
             this._continueCallback?.();
         })
     }

@@ -5,6 +5,12 @@ export default {
         landscapePosition: {x: 0.9, y: 0.1},
         landscapeSize: {x: 0.1, y: 0.2},
     },
+    downloadButtonConfig: {
+        portraitPosition: {x: 0.5, y: 0.85},
+        portraitSize: {x: 0.7, y: 0.3},
+        landscapePosition: {x: 0.5, y: 0.8},
+        landscapeSize: {x: 0.35, y: 0.3},
+    },
     addButtons: [
         {
             uiAssetConfig: {
@@ -99,7 +105,7 @@ export default {
                     modelData: {
                         modelName: 'corn_3',
                         parentName: 'objects',
-                        scale: 0.8,
+                        scale: 0.7,
                         soundName: 'plant_growing_1'
                     }
                 },
@@ -196,6 +202,15 @@ export default {
                     textureName: 'fence',
                     modelData: { 
                         modelName: 'fence',
+                        parentName: 'objects',
+                        scale: 0.35,
+                        soundName: 'building'
+                    }
+                },
+                {
+                    textureName: 'farm_ground',
+                    modelData: { 
+                        modelName: 'ground',
                         parentName: 'objects',
                         scale: 0.35,
                         soundName: 'building'

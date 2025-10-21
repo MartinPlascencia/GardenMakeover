@@ -2,7 +2,8 @@ import { Assets, AssetsManifest } from 'pixi.js';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, AnimationMixer, AnimationClip, TextureLoader, Texture } from 'three';
 
-import manifestJson from '../data/assets.json';
+//import manifestJson from '../data/assets.json';
+import manifestJson from '../data/assets';
 import sound from '../utils/Sound';
 
 // Add webpack require.context type declaration

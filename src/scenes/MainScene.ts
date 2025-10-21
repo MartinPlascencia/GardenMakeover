@@ -13,8 +13,8 @@ import sound from '../utils/Sound';
 import PlaneBasicAnimations from '../utils/PlaneBasicAnimations';
 export default class MainScene {
     private _active: boolean = true;
+    private _isPaused: boolean = false;
     private _assetsInlineHelper!: AssetsInlineHelper;
-
     private _scene: THREE.Scene;
     private _renderer: THREE.WebGLRenderer;
     private _camera: THREE.PerspectiveCamera;
@@ -23,12 +23,12 @@ export default class MainScene {
     private _activeModels: ModelAsset[] = [];
     private _ambientLight!: THREE.AmbientLight;
     private _directionalLight!: THREE.DirectionalLight;
-    private _isPaused: boolean = false;
     private _gameUI!: GameUI;
     private _splashParticles!: SplashEffect;
     private _currentObjectPosition: THREE.Vector3 = new THREE.Vector3();
     private _modelPlaceHolder!: ModelAsset;
 
+    private _modelPlaceHolderScale: number = 0.25;
 
     constructor(app: Application, assetsInlineHelper: AssetsInlineHelper) {
 
@@ -45,37 +45,24 @@ export default class MainScene {
         this._renderer.domElement.style.position = "absolute";
         this._renderer.domElement.style.top = "0";
         this._renderer.domElement.style.left = "0";
-        this._renderer.domElement.style.zIndex = "0";  // Three.js = background
-        this._renderer.domElement.style.pointerEvents = "none"; // Disable interaction
+        this._renderer.domElement.style.zIndex = "0"; 
+        this._renderer.domElement.style.pointerEvents = "none";
 
         pixiCanvas.style.position = "absolute";
         pixiCanvas.style.top = "0";
         pixiCanvas.style.left = "0";
-        pixiCanvas.style.zIndex = "1"; // Pixi.js = foreground
-        pixiCanvas.style.pointerEvents = "auto"; // Enable interaction
+        pixiCanvas.style.zIndex = "1";
+        pixiCanvas.style.pointerEvents = "auto";
 
         this._scene = new THREE.Scene();
         this._scene.background = new THREE.Color(0x9cfff0);
 
         this._camera = new THREE.PerspectiveCamera(75, app.screen.width / app.screen.height, 0.1, 1000);
-        this._camera.position.set(0, 12, 12);
-        this._camera.lookAt(0, 0, 0);
-
         this._clock = new THREE.Clock();
-        this._create();
 
         this._gameUI = new GameUI(app);
-
-        sdk.on('interaction', (count: number) => {
-            console.log(`Interaction count: ${count}`);
-
-            if (sdk.interactions >= 10) {
-                sdk.finish();
-            }
-        });
-
+        this._create();
         this._addEvents();
-
     }
 
     private _addEvents(): void {
@@ -178,6 +165,15 @@ export default class MainScene {
                 (child as THREE.Mesh).material = basicMaterial;
             }
         });
+        gsap.to(this._modelPlaceHolder.scale,{
+            x: this._modelPlaceHolderScale,
+            y: this._modelPlaceHolderScale,
+            z: this._modelPlaceHolderScale,
+            duration: 0.5,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
         this._scene.add(this._modelPlaceHolder);
 
         this._splashParticles = new SplashEffect(this._assetsInlineHelper.textures['smoke'], 20, 2.5);
@@ -195,10 +191,11 @@ export default class MainScene {
 
     private async _animateScene(): Promise<void> {
         this._updateCameraPosition(window.innerWidth, window.innerHeight);
+        this._gameUI.startCloudsAnimation(3);
         this._setDayLight(2);
         await gsap.from(this._camera.position,{
             y:60,
-            duration: 3,
+            duration: 3.5,
             ease: "power2.out",
             onUpdate: () => {
                 this._camera.lookAt(0, 0, 0);
@@ -221,13 +218,16 @@ export default class MainScene {
     private _animate(): void {
         requestAnimationFrame(() => this._animate());
 
-        if (!this._isPaused) this.update();
+        !this._isPaused && this.update();
         this._renderer.render(this._scene, this._camera);
     }
 
+    public pause(): void {
+        this._isPaused = true;
+    }
 
-    private _isPortrait(): boolean {
-        return window.innerWidth < window.innerHeight;
+    public resume(): void {
+        this._isPaused = false;
     }
 
     public resize(width: number, height: number): void {
@@ -256,7 +256,7 @@ export default class MainScene {
         const originalPosition = this._camera.position.clone();
         const tl = gsap.timeline();
 
-        const shakes = Math.floor(duration / 0.02); // number of shake steps
+        const shakes = Math.floor(duration / 0.02);
         for (let i = 0; i < shakes; i++) {
             tl.to(this._camera.position, {
                 x: originalPosition.x + (Math.random() - 0.5) * magnitude,
@@ -279,6 +279,4 @@ export default class MainScene {
     public get active(): boolean {
         return this._active;
     }
-
-
 }

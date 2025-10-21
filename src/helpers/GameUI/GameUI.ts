@@ -1,10 +1,12 @@
 import ObjectButton from './ObjectButton';
-import { Container, Application, Sprite, Assets } from 'pixi.js';
+import { Container, Application, Assets } from 'pixi.js';
 import { ButtonsConfig, AddButtonConfig } from '../../types/game';
 import CategoriesMenu from './Categories/CategoriesMenu';
 import AssetsMenu from './AssetsMenu/AssetsMenu';
 import DayNightButton from './DayNightButton';
 import TutorialHand from '../TutorialHand';
+import CloudsAnimation from './CloudsAnimation';
+import { sdk } from '@smoud/playable-sdk';
 import gsap from 'gsap';
 
 import sound from '../../utils/Sound';
@@ -12,6 +14,7 @@ import eventsSystem from '../../utils/EventsSystem';
 import PlaneBasicAnimations from '../../utils/PlaneBasicAnimations';
 
 import buttonsConfig from '../../data/buttonsConfig';
+import ScaledSprite from '../Scale/ScaledSprite';
 
 export default class GameUI extends Container {
     private _buttonsConfig: ButtonsConfig = buttonsConfig as ButtonsConfig;
@@ -20,6 +23,9 @@ export default class GameUI extends Container {
     private _assetsMenus: AssetsMenu[] = [];
     private _dayButton!: DayNightButton;
     private _tutorialHand!: TutorialHand;
+    private _cloudsAnimation: CloudsAnimation;
+    private _downloadButton!: ScaledSprite;
+    private _objectsPlaced: number = 0;
 
     private _currentAssetMenu: AssetsMenu | undefined = undefined;
     private _currentAddObjectButton: ObjectButton | undefined = undefined;
@@ -33,9 +39,33 @@ export default class GameUI extends Container {
         this._createAssetsMenu();
         this._createDayButton();
         this._createTutorialHand();
+        this._createDownloadButton();
+        this._createCloudsAnimation(app);
 
         this.resize(app.screen.width, app.screen.height);
         this._addEvents();
+    }
+
+    private _createDownloadButton(): void {
+        this._downloadButton = new ScaledSprite(Assets.get('download_button'));
+        this._downloadButton.scaler.setSizes(this._buttonsConfig.downloadButtonConfig);
+        this._downloadButton.anchor.set(0.5);
+        this._downloadButton.scaler.setOriginalSize(this._downloadButton.width, this._downloadButton.height);
+        this._downloadButton.alpha = 0;
+        this._downloadButton.eventMode = 'none';
+        this._downloadButton.cursor = 'pointer';
+        this._downloadButton.on('pointerdown', () => {
+            sound.playSound('click_add');
+            PlaneBasicAnimations.animateButton(this._downloadButton, undefined, true);
+            sdk.install();
+        });
+        this.addChild(this._downloadButton);
+    }
+
+    public showDownloadButton(): void {
+        sound.playSound('pop_button');
+        PlaneBasicAnimations.popObject(this._downloadButton, () => this._downloadButton.eventMode = 'static');
+        sdk.finish();
     }
 
     private _createDayButton(): void {
@@ -48,6 +78,15 @@ export default class GameUI extends Container {
         this._tutorialHand = new TutorialHand('hand');
         this.addChild(this._tutorialHand);
     }
+
+    private _createCloudsAnimation(app: Application): void {
+        this._cloudsAnimation = new CloudsAnimation('cloud', 'cloud', app.screen.width, app.screen.height);
+        this.addChild(this._cloudsAnimation);
+    }
+
+    public startCloudsAnimation(duration: number): void {
+        this._cloudsAnimation.startAnimation(duration);
+    }   
 
     private _addEvents(): void {
         eventsSystem.on('addObjectButtonPressed', this._addButtonPressed.bind(this));
@@ -158,6 +197,7 @@ export default class GameUI extends Container {
         this._dayButton.scaler.resize(width, height);
         this._categoriesMenu.scaler.resize(width, height);
         this._tutorialHand.resize(width, height);
+        this._downloadButton.scaler.resize(width, height);
     }
 
     private _hideScreens(): void {
@@ -175,12 +215,9 @@ export default class GameUI extends Container {
             this._tutorialHand.cancelTutorial();
         }
         this.showAddObjectButtons(0.3);
-        
+        this._objectsPlaced++;
+        if (this._objectsPlaced >= this._addButtons.length) {
+            this.showDownloadButton();
+        }
     }    
-
-
-
-
-
-
 }

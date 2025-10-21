@@ -15,7 +15,7 @@ export default class ObjectButton extends ScaledSprite {
         this.anchor.set(0.5);
 
         this._isActive = true;
-        this.eventMode = 'static';
+        this.eventMode = 'none';
         this.cursor = 'pointer';
         this.on('pointerdown', () => {
             eventsSystem.emit('addObjectButtonPressed', buttonConfig.objectPosition, this);

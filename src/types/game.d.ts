@@ -4,6 +4,7 @@ type ButtonsConfig = {
     categoryMenuConfig: CategoryMenuConfig,
     assetsMenusConfig: AssetMenuConfig[],
     dayButtonConfig: UIAssetConfig,
+    downloadButtonConfig: UIAssetConfig,
 }
 
 type UIAssetConfig = {

@@ -4,6 +4,8 @@ class Sound {
     private static instance: Sound;
     private _sounds: Map<string, Howl>;
     private _active: boolean = true;
+    private _volume: number = 1.0;
+    private _currentSound : Howl | null = null;
 
     private constructor() {
         this._sounds = new Map();
@@ -11,6 +13,11 @@ class Sound {
 
     public get active(): boolean {
         return this._active;
+    }
+
+    public setVolume(volume: number): void {
+        this._volume = volume;
+        this._currentSound?.volume(volume);
     }
 
     public setActive(active: boolean): void {
@@ -42,7 +49,7 @@ class Sound {
         });
     }
 
-    public playSound(key: string, loop: boolean = false, volume: number = 1.0): void {
+    public playSound(key: string, loop: boolean = false, volume: number = this._volume): void {
         if (!this._active) {
             return;
         }
@@ -56,19 +63,13 @@ class Sound {
         sound.loop(loop);
         sound.volume(volume);
         sound.play();
+        this._currentSound = sound;
     }
 
     public stopSound(key: string): void {
         const sound = this._sounds.get(key);
         if (sound) {
             sound.stop();
-        }
-    }
-
-    public setVolume(key: string, volume: number): void {
-        const sound = this._sounds.get(key);
-        if (sound) {
-            sound.volume(Math.max(0, Math.min(1, volume)));
         }
     }
 
