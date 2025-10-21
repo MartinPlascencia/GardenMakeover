@@ -1,8 +1,8 @@
 # GardenMakeover
-Playable Ad Test created with TypeScript, PixiJS and ThreeJS.
-It uses the @smoud/playable-scripts library:
+Playable Ad Test created with TypeScript, PixiJS and ThreeJS and the @smoud/playable-scripts library.
+## @smoud/playable-scripts library
 https://github.com/smoudjs/playable-scripts
-You can play the version here:
+## Play Version
 https://martinplascencia.com/games/garden_makeover/
 
 
